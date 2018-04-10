@@ -27,16 +27,16 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div id="kata_kunci" class="form-group">
-                                            <input name="bidang" type="text" class="form-control" id="tags" placeholder="Keyword" />
+                                            <input name="keyword" type="text" class="form-control" id="tags" placeholder="Keyword" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <input type="checkbox" name="bidang" value="teknologi">Teknologi
-                                        <input type="checkbox" name="bidang" value="ekonomi">Ekonomi<br>
-                                        <input type="checkbox" name="bidang" value="bisnis">Bisnis
-                                        <input type="checkbox" name="bidang" value="biologi">Biologi<br>
+                                        <input type="checkbox" name="bidang[]" value="teknologi">Teknologi
+                                        <input type="checkbox" name="bidang[]" value="ekonomi">Ekonomi<br>
+                                        <input type="checkbox" name="bidang[]" value="bisnis">Bisnis
+                                        <input type="checkbox" name="bidang[]" value="biologi">Biologi<br>
                                     </div>
                                 </div>
                                 <div class="row">
