@@ -442,10 +442,10 @@ class Welcome extends CI_Controller {
 		$artikel = $this->data->getData();
 		
 		foreach ($artikel->result() as $key) { //untuk menjumlahkan seluruh step dan dibuat rata-rata
-			$totalallstep[$key->id] = (($stepone[$key->id]*30)+($steptwo[$key->id]*20)+($stepthree[$key->id]*20)+($stepfour[$key->id]*10)+($stepfive[$key->id])*20)/100;
+			$totalallstep[$key->id] = (($stepone[$key->id]*0)+($steptwo[$key->id]*20)+($stepthree[$key->id]*10)+($stepfour[$key->id]*10)+($stepfive[$key->id])*10)/100;
 			$finaltotalallstep[$key->id_jurnal] = 0;
 		}
-		$inc = 0;
+	
 		foreach ($artikel->result() as $key) {
 			if($finaltotalallstep[$key->id_jurnal] == 0){
 				$finaltotalallstep[$key->id_jurnal] = $totalallstep[$key->id];
