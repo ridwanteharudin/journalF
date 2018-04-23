@@ -1,7 +1,7 @@
 <?php
 class data extends CI_Model{
-	var $tabel1 = 'artikel';
-	var $tabel2 = 'jurnal';
+	var $tabel1 = 'jurnal';
+	var $tabel2 = 'direktori';
 
 	function getData() {
     return $this->db->get($this->tabel1);
@@ -11,12 +11,18 @@ class data extends CI_Model{
     return $this->db->get($this->tabel2);
   }
   function getJudulJurnal($id){
-  	return $this->db->
-  					select('judul_jurnal')->
-    				from('jurnal')->
-    				where('id_jurnal', $id)->
-    				get()->row_array();
+    return $this->db->
+            select('judul,deskriptor')->
+            from('direktori')->
+            where('id_direktori', $id)->
+            get()->row_array();
 
+  }
+  function getArtikel(){
+    $this->db->select('id_jurnal,id_direktori,title,sari,keywords');
+    $this->db->from('jurnal');
+    $this->db->where('sari !=',"");
+    return $this->db->get();
   }
 }
 ?>

@@ -1,8 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
 class Welcome extends CI_Controller {
-
 	/**
 	 * Index Page for this controller.
 	 *
@@ -18,11 +16,9 @@ class Welcome extends CI_Controller {
 	 * map to /index.php/welcome/<method_name>
 	 * @see https://codeigniter.com/user_guide/general/urls.html
 	 */
-
 	public function __construct() {
           parent::__construct();
           $this->load->model(array('data'));
-
     }
 	public function index()
 	{
@@ -30,53 +26,44 @@ class Welcome extends CI_Controller {
 		$this->load->view('pages/content');
 		$this->load->view('template/footer');
 	}
-
 	public function pdf(){
 		$stemmerFactory = new \Sastrawi\Stemmer\StemmerFactory();
 		$stopwordFactory = new \Sastrawi\StopWordRemover\StopWordRemoverFactory();
-
 		$stopword = $stopwordFactory->createStopWordRemover();
         $stemmer  = $stemmerFactory->createStemmer();
-		$jurnal = $this->data->getData();
-		foreach ($jurnal->result() as $key) {
-			$judulpdf = $key -> judul;
-			$abstrakpdf = $key -> abstrak;
-			$keywordpdf = $key -> keyword;
-			$bidangpdf = $key -> bidang;
+		$artikel = $this->data->getArtikel();
+		foreach ($artikel->result() as $key) {
+			$title = $key -> title;
+			$keyword = $key -> keywords;
+			$abstract = $key -> sari;
 
+			$titleStem = $stemmer->stem($title);
+			$keywordStem = $stemmer->stem($keyword);
+			$abstractStem = $stemmer->stem($abstract);
 
-			$judulpdfstem = $stemmer->stem($judulpdf);
-			$abstrakpdfstem = $stemmer->stem($abstrakpdf);
-			$keywordpdfstem = $stemmer->stem($keywordpdf);
-			$bidangpdfstem = $stemmer->stem($bidangpdf);
+			$titleRemove = $stopword->remove($titleStem);
+			$keywordRemove = $stopword->remove($keywordStem);
+			$abstractRemove = $stopword->remove($abstractStem);
 
-			$judulpdffinal = $stopword->remove($judulpdfstem);
-			$abstrakpdffinal = $stopword->remove($abstrakpdfstem);
-			$keywordpdffinal = $stopword->remove($keywordpdfstem);
-			$bidangpdffinal = $stopword->remove($bidangpdfstem);
+			$titleSplit = explode(" ", $titleRemove);
+			$keywordSplit = explode(" ", $keywordRemove);
+			$abstractSplit = explode(" ", $abstractRemove);
 
-			$judulpdfsplit = explode(" ", $judulpdffinal);
-			$abstrakpdfsplit = explode(" ", $abstrakpdffinal);
-			$keywordpdfsplit = explode(" ", $keywordpdffinal);
-			$bidangpdfsplit = explode(" ", $bidangpdffinal);
+			$titleClear = array_unique($titleSplit);
+			$keywordClear = array_unique($keywordSplit);
+			$abstractClear = array_unique($abstractSplit);
 
-			$judulpdfclear = array_unique($judulpdfsplit);
-			$abstrakpdfclear = array_unique($abstrakpdfsplit);
-			$keywordpdfclear = array_unique($keywordpdfsplit);
-			$bidangpdfclear = array_unique($bidangpdfsplit);
+			sort($titleClear);
+			sort($keywordClear);
+			sort($abstractClear);
 
-			sort($judulpdfclear);
-			sort($abstrakpdfclear);
-			sort($keywordpdfclear);
-			sort($judulpdfclear);
-
-			$datapdf[$key->id] = array($judulpdfclear,$abstrakpdfclear,$keywordpdfclear,$bidangpdfclear);
+			$datapdf[$key->id_jurnal] = array($titleClear,$abstractClear,$keywordClear);
 		}
 		return $datapdf;
 	}
+	/*
 	public function stepone($data){
 		$datapdf = $this->pdf();
-
 		$jurnal = $this->data->getData();
 		foreach ($jurnal->result() as $key) {
 			$jujul = 0;
@@ -94,11 +81,7 @@ class Welcome extends CI_Controller {
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasiljul = ($jujul/count($data[$x])) * 100;
-							}else{
-								$hasiljul = ($jujul/count($datapdf[$key->id][$y]))*100;
-							}
+							$hasiljul = ($jujul / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id][$y]))))*100;
 						}
 					}
 				}elseif ($x==1) {
@@ -111,11 +94,7 @@ class Welcome extends CI_Controller {
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilab = ($abab/count($data[$x])) * 100;
-							}else{
-								$hasilab = ($abab/count($datapdf[$key->id][$y]))*100;
-							}
+							$hasilab = ($abab / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id][$y]))))*100;
 						}
 					}
 				}elseif ($x==2) {
@@ -128,11 +107,7 @@ class Welcome extends CI_Controller {
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilword = ($wordword/count($data[$x])) * 100;
-							}else{
-								$hasilword = ($wordword/count($datapdf[$key->id][$y]))*100;
-							}
+							$hasilword = ($wordword / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id][$y]))))*100;
 						}
 					}
 				}elseif($x==3){
@@ -145,15 +120,10 @@ class Welcome extends CI_Controller {
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilbid = ($bidbid/count($data[$x])) * 100;
-							}else{
-								$hasilbid = ($bidbid/count($datapdf[$key->id][$y]))*100;
-							}
+							$hasilbid = ($bidbid / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id][$y]))))*100;
 						}
 					}
 				}
-
 			}
 			//$hasil[$key->id] = $jujul + $abab + $biword;
 			$totalstepone[$key->id] = (($hasiljul * 30) + ($hasilab * 30) + ($hasilword * 20) + ($hasilbid * 20))/100;	
@@ -161,10 +131,8 @@ class Welcome extends CI_Controller {
 		
 		return $totalstepone;
 	}
-
 	public function steptwo($data){ //judul user dibandingkan dengan seluruh pdf kecuali judulnya
 		$datapdf = $this->pdf();
-
 		$jurnal = $this->data->getData();
 		foreach ($jurnal->result() as $key) {
 			$jutrak = 0;
@@ -181,11 +149,7 @@ class Welcome extends CI_Controller {
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasiljutrak = ($jutrak/count($data[$x])) * 100;
-							}else{
-								$hasiljutrak = ($jutrak/count($datapdf[$key->id][$y]))*100;
-							}
+							$hasiljutrak = ($jutrak / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id][$y]))))*100;
 						}elseif ($y==2) { // judul dengan keyword
 							for($z=0;$z<count($data[$x]);$z++){
 								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
@@ -194,11 +158,7 @@ class Welcome extends CI_Controller {
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasiljuword = ($juword/count($data[$x])) * 100;
-							}else{
-								$hasiljuword = ($juword/count($datapdf[$key->id][$y]))*100;
-							}
+							$hasiljuword = ($juword / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id][$y]))))*100;
 						}elseif ($y==3) { // judul dengan bidang
 							for($z=0;$z<count($data[$x]);$z++){
 								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
@@ -207,11 +167,7 @@ class Welcome extends CI_Controller {
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasiljubid = ($jubid/count($data[$x])) * 100;
-							}else{
-								$hasiljubid = ($jubid/count($datapdf[$key->id][$y]))*100;
-							}
+							$hasiljubid = ($jubid / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id][$y]))))*100;
 						}
 					}
 				}
@@ -220,189 +176,148 @@ class Welcome extends CI_Controller {
 		}
 		return $totalsteptwo;
 	}
-	public function stepthree($data){ //judul user dibandingkan dengan seluruh pdf kecuali judulnya
-		$datapdf = $this->pdf();
+	*/
 
-		$jurnal = $this->data->getData();
-		foreach ($jurnal->result() as $key) {
-			$abjul = 0;
-			$abword = 0;
-			$abbid = 0;
+	public function stepthree($data){ //abstract user dibandingkan dengan judul, abstract dan keyword pada artikel
+		$datapdf = $this->pdf();
+		$artikel = $this->data->getArtikel();
+		foreach ($artikel->result() as $key) {
+			$absTitle = 0;
+			$absAbstract = 0;
+			$absKeyword = 0;
 			for($x=0;$x<count($data);$x++){
 				if($x==1){
-					for($y=0;$y<count($datapdf[$key->id]);$y++){
-						if ($y==0) { // abtrak dengan judul
+					for($y=0;$y<count($datapdf[$key->id_jurnal]);$y++){
+						if ($y==0) { // abstrak dengan judul
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$abjul = $abjul + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$absTitle = $absTitle + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilabjul = ($abjul/count($data[$x])) * 100;
-							}else{
-								$hasilabjul = ($abjul/count($datapdf[$key->id][$y]))*100;
+							$totAbsTitle = ($absTitle / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
+						}elseif ($y==1) { // abstrak dengan abstrak
+							for($z=0;$z<count($data[$x]);$z++){
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$absAbstract = $absAbstract + 1;
+									}
+								}
 							}
+							$totAbsAbstract = ($absAbstract / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
 						}elseif ($y==2) { // abstrak dengan keyword
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$abword = $abword + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$absKeyword = $absKeyword + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilabword = ($abword/count($data[$x])) * 100;
-							}else{
-								$hasilabword = ($abword/count($datapdf[$key->id][$y]))*100;
-							}
-						}elseif ($y==3) { // abstrak dengan keyword
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$abbid = $abbid + 1;
-									}
-								}
-							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilabbid = ($abbid/count($data[$x])) * 100;
-							}else{
-								$hasilabbid = ($abbid/count($datapdf[$key->id][$y]))*100;
-							}
+							$totAbsKeyword = ($absKeyword / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
 						}
 					}
 				}
 			}
-			$totalstepthree[$key->id] = (($hasilabjul*50) + ($hasilabword * 30) + ($hasilabbid * 20 ))/100;
+			$totalstepthree[$key->id_jurnal] = (($totAbsTitle*0) + ($totAbsAbstract * 100) + ($totAbsKeyword * 0 ))/100;
 		}
 		return $totalstepthree;
 	}
-	public function stepfour($data){ //judul user dibandingkan dengan seluruh pdf kecuali judulnya
+	public function stepfour($data){ //keywords user dibandingkan judul, abstrak dan keyword pada artikel
 		$datapdf = $this->pdf();
-
-		$jurnal = $this->data->getData();
-		foreach ($jurnal->result() as $key) {
-			$wordjul = 0;
-			$wordtrak = 0;
-			$wordbid = 0;
+		$artikel = $this->data->getArtikel();
+		foreach ($artikel->result() as $key) {
+			$keyTitle = 0;
+			$keyAbstract = 0;
+			$keyKeyword = 0;
 			for($x=0;$x<count($data);$x++){
 				if($x==2){
-					for($y=0;$y<count($datapdf[$key->id]);$y++){
+					for($y=0;$y<count($datapdf[$key->id_jurnal]);$y++){
 						if ($y==0) { // keyword dengan judul
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$wordjul = $wordjul + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$keyTitle = $keyTitle + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilwordjul = ($wordjul/count($data[$x])) * 100;
-							}else{
-								$hasilwordjul = ($wordjul/count($datapdf[$key->id][$y]))*100;
-							}
+							$totKeyTitle = ($keyTitle / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
 						}elseif ($y==1) { // keyword dengan abstrak
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$wordtrak = $wordtrak + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$keyAbstract = $keyAbstract + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilwordtrak = ($wordtrak/count($data[$x])) * 100;
-							}else{
-								$hasilwordtrak = ($wordtrak/count($datapdf[$key->id][$y]))*100;
-							}
-						}elseif ($y==3) { // keyword dengan abstrak
+							$totKeyAbstract = ($keyAbstract / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
+						}elseif ($y==2) { // keyword dengan keyword
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$wordbid = $wordbid + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$keyKeyword = $keyKeyword + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilwordbid = ($wordbid/count($data[$x])) * 100;
-							}else{
-								$hasilwordbid = ($wordbid/count($datapdf[$key->id][$y]))*100;
-							}
+							$totKeyKeyword = ($keyKeyword / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
 						}
 					}
 				}
 			}
-			$totalstepfour[$key->id] = (($hasilwordjul*50)+($hasilwordtrak*30) + ($hasilwordbid * 20)) / 100;	
+			$totalstepfour[$key->id_jurnal] = (($totKeyTitle*10)+($totKeyAbstract*10) + ($totKeyKeyword * 80)) / 100;	
 		}
 		return $totalstepfour;
 	}
-
-	public function stepfive($data){ //judul user dibandingkan dengan seluruh pdf kecuali judulnya
+	public function stepfive($data){ //bidang user dibandingkan dengan judul, abstrak dan keyword pada artikel
 		$datapdf = $this->pdf();
-
-		$jurnal = $this->data->getData();
-		foreach ($jurnal->result() as $key) {
-			$bijul = 0;
-			$bitrak = 0;
-			$biword = 0;
+		$artikel = $this->data->getArtikel();
+		foreach ($artikel->result() as $key) {
+			$bidTitle = 0;
+			$bidAbstract = 0;
+			$bidKeyword = 0;
 			for($x=0;$x<count($data);$x++){
 				if($x==3){
-					for($y=0;$y<count($datapdf[$key->id]);$y++){
+					for($y=0;$y<count($datapdf[$key->id_jurnal]);$y++){
 						if ($y==0) { // bidang dengan judul
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$bijul = $bijul + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$bidTitle = $bidTitle + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilbijul = ($bijul/count($data[$x])) * 100;
-							}else{
-								$hasilbijul = ($bijul/count($datapdf[$key->id][$y]))*100;
-							}
+							$totBidTitle = ($bidTitle / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
 						}elseif ($y==1) { // bidang dengan abstrak
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$bitrak = $bitrak + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$bidAbstract = $bidAbstract + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilbitrak = ($bitrak/count($data[$x])) * 100;
-							}else{
-								$hasilbitrak = ($bitrak/count($datapdf[$key->id][$y]))*100;
-							}
+							$totBidAbstract = ($bidAbstract / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
 						}elseif ($y==2) { // bidang dengan keyword
 							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$key->id][$y]);$m++){
-									if($data[$x][$z]==$datapdf[$key->id][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id][$y][$m] != ""){
-										$biword = $biword + 1;
+								for($m=0;$m<count($datapdf[$key->id_jurnal][$y]);$m++){
+									if($data[$x][$z]==$datapdf[$key->id_jurnal][$y][$m] && $data[$x][$z]!= "" && $datapdf[$key->id_jurnal][$y][$m] != ""){
+										$bidKeyword = $bidKeyword + 1;
 									}
 								}
 							}
-							if(count($data[$x])>count($datapdf[$key->id][$y])){
-								$hasilbiword = ($biword/count($data[$x])) * 100;
-							}else{
-								$hasilbiword = ($biword/count($datapdf[$key->id][$y]))*100;
-							}
+							$totBidKeyword = ($bidKeyword / (sqrt(count($data[$x])) * sqrt(count($datapdf[$key->id_jurnal][$y]))))*100;
 						}
 					}
 				}
 			}
-			$totalstepfive[$key->id] = (($hasilbijul*50)+($hasilbitrak*30) + ($hasilbiword * 20)) / 100;	
+			$totalstepfive[$key->id_jurnal] = (($totBidTitle*30)+($totBidAbstract*20) + ($totBidKeyword * 50)) / 100;	
 		}
 		return $totalstepfive;
 	}
-
 	public function input_data(){
 		$stemmerFactory = new \Sastrawi\Stemmer\StemmerFactory();
 		$stopwordFactory = new \Sastrawi\StopWordRemover\StopWordRemoverFactory();
-
 		$stopword = $stopwordFactory->createStopWordRemover();
         $stemmer  = $stemmerFactory->createStemmer();
-
 		$judul = $this->input->post('judul');
 		$abstrak = $_POST['abstrak'];
 		$keyword = $_POST['keyword'];
@@ -410,238 +325,56 @@ class Welcome extends CI_Controller {
 			$bidangclear = $_POST['bidang'];
 		else
 			$bidangclear = " ";
-
 		$judulstem = $stemmer->stem($judul);
 		$abstrakstem =$stemmer->stem($abstrak);
 		$keywordstem = $stemmer->stem($keyword);
-
 		$judulremove = $stopword->remove($judulstem);
 		$abstrakremove = $stopword->remove($abstrakstem);
 		$keywordremove = $stopword->remove($keywordstem);
-
 		$judulsplit = explode(" ", $judulremove);
 		$abstraksplit = explode(" ", $abstrakremove);
 		$keywordsplit = explode(" ", $keywordremove);
-
 		$judulclear = array_unique($judulsplit);
 		$abstrakclear = array_unique($abstraksplit);
 		$keywordclear = array_unique($keywordsplit);
-
 		sort($judulclear);
 		sort($abstrakclear);
 		sort($keywordclear);
 	
 		$data = array($judulclear,$abstrakclear,$keywordclear, $bidangclear);
-
-		$stepone = $this->stepone($data);
-		$steptwo = $this->steptwo($data);
+		//$stepone = $this->stepone($data);
+		//$steptwo = $this->steptwo($data);
 		$stepthree = $this->stepthree($data);
 		$stepfour = $this->stepfour($data);
 		$stepfive = $this->stepfive($data);
 
-		$artikel = $this->data->getData();
-		
+		$artikel = $this->data->getArtikel();
+
 		foreach ($artikel->result() as $key) { //untuk menjumlahkan seluruh step dan dibuat rata-rata
-			$totalallstep[$key->id] = (($stepone[$key->id]*0)+($steptwo[$key->id]*20)+($stepthree[$key->id]*10)+($stepfour[$key->id]*10)+($stepfive[$key->id])*10)/100;
-			$finaltotalallstep[$key->id_jurnal] = 0;
+			$totalallstep[$key->id_jurnal] = (($stepthree[$key->id_jurnal]*80)+($stepfour[$key->id_jurnal]*10)+($stepfive[$key->id_jurnal])*10)/100;
+			$finaltotalallstep[$key->id_direktori] = 0;
 		}
 	
 		foreach ($artikel->result() as $key) {
-			if($finaltotalallstep[$key->id_jurnal] == 0){
-				$finaltotalallstep[$key->id_jurnal] = $totalallstep[$key->id];
+			if($finaltotalallstep[$key->id_direktori] == 0){
+				$finaltotalallstep[$key->id_direktori] = $totalallstep[$key->id_jurnal];
 			}else{
-				$finaltotalallstep[$key->id_jurnal] = ($finaltotalallstep[$key->id_jurnal] + $totalallstep[$key->id])/2;
+				$finaltotalallstep[$key->id_direktori] = ($finaltotalallstep[$key->id_direktori] + $totalallstep[$key->id_jurnal])/2;
 			} 
 		}
 		
 		arsort($finaltotalallstep);
-		print_r($finaltotalallstep);
-		echo "<br>";
 		
 		foreach ($finaltotalallstep as $key => $val ) {
-			$judulfinal= $this->data->getJudulJurnal($key);
-			echo $key." <a href='google.com'>".$judulfinal['judul_jurnal']."</a>";
-			echo "<br>";
+			if($val != 0){
+				$judulfinal= $this->data->getJudulJurnal($key);
+				echo $key." <a href='google.com'>".$judulfinal['judul']."</a>";
+				echo $judulfinal['deskriptor'];
+				echo "<br>";
+			}
 		}
-
-
 		//echo $finaltotalallstep[1]." %";
 		echo "<br>";
 		//echo $finaltotalallstep[2]. " %"; 
-
-		/*
-		if(empty($judul)){
-			if(empty($abstrak)){
-				$data = array($bidangclear);
-			}elseif (empty($bidang)) {
-				$data = array($abstrakclear);
-			}elseif (empty($bidang) && empty($abstrak)) {
-				$data = null;
-			}else{
-				$data = array($abstrakclear,$bidangclear);
-			}
-		}elseif (empty($abstrak)) {
-			if(empty($judul)){
-				$data = array($bidangclear);
-			}elseif (empty($bidang)) {
-				$data = array($judulclear);
-			}elseif (empty($bidang) && empty($judul)) {
-				$data = null;
-			}else{
-				$data = array($judulclear,$bidangclear);
-			}
-		}elseif (empty($bidang)) {
-			if(empty($judul)){
-				$data = array($abstrakclear);
-			}elseif (empty($abstrak)) {
-				$data = array($judulclear);
-			}elseif (empty($abstrak) && empty($judul)) {
-				$data = null;
-			}else{
-				$data = array($judulclear,$abstrakclear);
-			}
-		}else{
-			$data = array($judulclear,$abstrakclear,$bidangclear );
-		}
-
-
-
-		ambil data didatabase
-		$jurnal = $this->data->getData();
-		$jujul = 0;
-		$jutrak = 0;
-		$juword = 0;
-		$abjul = 0;
-		$abab = 0;
-		$abword = 0;
-		$bijul = 0;
-		$bitrak = 0;
-		$biword = 0;
-		$counter=0;
-		foreach ($jurnal->result() as $key) {
-			$jujul = 0;
-			$jutrak = 0;
-			$juword = 0;
-			$abjul = 0;
-			$abab = 0;
-			$abword = 0;
-			$bijul = 0;
-			$bitrak = 0;
-			$biword = 0;
-			$counter=0;
-			$judulpdf = $key -> judul;
-			$abstrakpdf = $key -> abstrak;
-			$keywordpdf = $key -> keyword;
-
-			$judulpdfstem = $stemmer->stem($judulpdf);
-			$abstrakpdfstem = $stemmer->stem($abstrakpdf);
-			$keywordpdfstem = $stemmer->stem($keywordpdf);
-
-			$judulpdffinal = $stopword->remove($judulpdfstem);
-			$abstrakpdffinal = $stopword->remove($abstrakpdfstem);
-			$keywordpdffinal = $stopword->remove($keywordpdfstem);
-
-			$judulpdfsplit = explode(" ", $judulpdffinal);
-			$abstrakpdfsplit = explode(" ", $abstrakpdffinal);
-			$keywordpdfsplit = explode(" ", $keywordpdffinal);
-
-			$judulpdfclear = array_unique($judulpdfsplit);
-			$abstrakpdfclear = array_unique($abstrakpdfsplit);
-			$keywordpdfclear = array_unique($keywordpdfsplit);
-
-			$datapdf = array($judulpdfclear,$abstrakpdfclear,$keywordpdfclear);
-			for($x=0;$x<count($data);$x++){
-				if($x==0){
-					for($y=0;$y<count($datapdf);$y++){
-						if ($y==0) { // judul dengan judul
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$jujul = $jujul + 1;
-									}
-								}
-							}
-						}elseif ($y==1) { // judul dengan abstrak
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$jutrak = $jutrak + 1;
-									}
-								}
-							}
-						}elseif ($y==2) { // judul dengan keyword
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$juword = $juword + 1;
-									}
-								}
-							}
-						}
-					}
-				}elseif ($x==1) {
-					for($y=0;$y<3;$y++){
-						if ($y==0) { // abstrak dengan judul
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$abjul = $abjul + 1;
-									}
-								}
-							}
-						}elseif ($y==1) { //abstrak dengan abstrak
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$abab = $abab + 1;
-									}
-								}
-							}
-						}elseif ($y==2) { //abstrak dengan keyword
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$abword = $abword + 1;
-									}
-								}
-							}
-						}
-					}
-				}elseif ($x==2) {
-					for($y=0;$y<3;$y++){
-						if ($y==0) { // bidang dengan judul
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$bijul = $bijul + 1;
-									}
-								}
-							}
-						}elseif ($y==1) { // bidang dengan abstrak
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$bitrak = $bitrak + 1;
-									}
-								}
-							}
-						}elseif ($y==2) { //bidang dengan keyword
-							for($z=0;$z<count($data[$x]);$z++){
-								for($m=0;$m<count($datapdf[$y]);$m++){
-									if($data[$x][$z]==$datapdf[$y][$m]){
-										$biword = $biword + 1;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			$hasil[$key->id] = $jujul + $jutrak + $juword + $abjul + $abab + $abword + $bijul + $bitrak + $biword;
-			echo $hasil[$key->id];
-			echo "<br>";
-		}
-		sort($hasil);
-		print_r($hasil); */
    } 
 }
