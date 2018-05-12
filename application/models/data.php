@@ -22,6 +22,9 @@ class data extends CI_Model{
     $this->db->select('id_jurnal,id_direktori,title,sari,keywords');
     $this->db->from('jurnal');
     $this->db->where('sari !=',"");
+    $this->db->where('sari !=',"null");
+    $this->db->where('keywords !=',"null");
+    $this->db->where('keywords !=',"");
     return $this->db->get();
   }
 }
